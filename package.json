@@ -16,7 +16,7 @@
     "lint": "eslint src --ext .ts,.tsx",
     "lint:fix": "eslint src --ext .ts,.tsx --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\"",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc -p tsconfig.node.json --noEmit"
   },
   "dependencies": {
     "@pixiv/three-vrm": "1.0.7",

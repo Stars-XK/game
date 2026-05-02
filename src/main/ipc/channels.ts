@@ -17,6 +17,8 @@ export const IPC_CHANNELS = {
     HIDE: 'window:hide',
     SET_ALWAYS_ON_TOP: 'window:set-always-on-top',
     SET_POSITION: 'window:set-position',
+    GET_POSITION: 'window:get-position',
+    SET_MOUSE_PASSTHROUGH: 'window:set-mouse-passthrough',
   },
   PET: {
     GET_STATE: 'pet:get-state',

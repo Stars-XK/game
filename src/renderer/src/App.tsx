@@ -13,6 +13,7 @@ import { useSceneAnalyzer, getSceneDescription } from './hooks/useSceneAnalyzer'
 import { useSmartInteraction } from './hooks/useSmartInteraction'
 import { useKeyboardShortcuts, SHORTCUTS } from './hooks/useKeyboardShortcuts'
 import { useTheme } from './hooks/useTheme'
+import { useMousePassthrough } from './hooks/useMousePassthrough'
 import { useToast } from './components/common/Toast'
 import { usePetStats } from './hooks/usePetStats'
 import { debounce } from './utils/helpers'
@@ -33,11 +34,19 @@ function App() {
   const [showFeed, setShowFeed] = useState(false)
   const [modelScale, setModelScale] = useState(0.4)
   const dragRef = useRef({ isDragging: false, startX: 0, startY: 0 })
+  const windowDragRef = useRef<{
+    dragging: boolean
+    startScreenX: number
+    startScreenY: number
+    startWinX: number
+    startWinY: number
+  } | null>(null)
 
   const { sceneInfo } = useSceneAnalyzer(120000, true)
   const { theme } = useTheme()
   const toast = useToast()
   const { stats, foods, feed, pet, play, getMoodFromStats } = usePetStats()
+  const passthrough = useMousePassthrough()
 
   useEffect(() => {
     const hasSeenGuide = localStorage.getItem('hasSeenGuide')
@@ -45,6 +54,20 @@ function App() {
       setShowGuide(true)
     }
   }, [])
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.electronAPI?.events?.onOpenSettings) return
+    const off = window.electronAPI.events.onOpenSettings(() => {
+      setShowSettings(true)
+    })
+    return () => off()
+  }, [])
+
+  useEffect(() => {
+    const open =
+      showChat || showSettings || showDressUp || showGame || showAchievement || showStatus || showFeed
+    passthrough.setPanelOpen(open)
+  }, [showChat, showSettings, showDressUp, showGame, showAchievement, showStatus, showFeed, passthrough])
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -68,12 +91,53 @@ function App() {
     setShowInfo(true)
   }, [])
 
+  const startWindowDrag = useCallback(async (screenX: number, screenY: number) => {
+    if (typeof window === 'undefined' || !window.electronAPI?.window?.getPosition) return
+    const pos = await window.electronAPI.window.getPosition()
+    if (!pos) return
+
+    windowDragRef.current = {
+      dragging: true,
+      startScreenX: screenX,
+      startScreenY: screenY,
+      startWinX: pos.x,
+      startWinY: pos.y,
+    }
+  }, [])
+
   useSmartInteraction(sceneInfo, setMood, showMessage, true)
 
   useEffect(() => {
     const timer = setTimeout(() => setShowInfo(false), 5000)
     return () => clearTimeout(timer)
   }, [showInfo])
+
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      const s = windowDragRef.current
+      if (!s?.dragging) return
+      const dx = e.screenX - s.startScreenX
+      const dy = e.screenY - s.startScreenY
+      void window.electronAPI?.window?.setPosition(s.startWinX + dx, s.startWinY + dy)
+    }
+
+    const onUp = async () => {
+      const s = windowDragRef.current
+      if (!s?.dragging) return
+      windowDragRef.current = { ...s, dragging: false }
+      const pos = await window.electronAPI?.window?.getPosition?.()
+      if (pos && window.electronAPI?.config?.set) {
+        await window.electronAPI.config.set({ windowPosition: pos })
+      }
+    }
+
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+    return () => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+  }, [])
 
   const savePosition = useCallback(
     debounce((x: number, y: number) => {
@@ -255,6 +319,8 @@ function App() {
               setAction('idle')
             }, 1000)
           }}
+          onHoverChange={(hovering) => passthrough.setInteractiveHover(hovering)}
+          onModelPointerDown={(e) => startWindowDrag(e.screenX, e.screenY)}
           onWheel={handleWheel}
         />
         {showInfo && <div className="pet-bubble">{getBubbleMessage()}</div>}

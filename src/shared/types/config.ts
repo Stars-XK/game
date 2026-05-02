@@ -8,6 +8,7 @@ export interface AppConfig {
   theme: 'light' | 'dark' | 'auto'
   autoStart: boolean
   alwaysOnTop: boolean
+  windowPosition?: { x: number; y: number }
   interactionRange: 'screen' | 'window'
   debugMode: boolean
   appearance: PetAppearanceConfig
@@ -53,6 +54,7 @@ export const DEFAULT_CONFIG: AppConfig = {
   theme: 'auto',
   autoStart: false,
   alwaysOnTop: true,
+  windowPosition: undefined,
   interactionRange: 'screen',
   debugMode: false,
   appearance: DEFAULT_APPEARANCE,

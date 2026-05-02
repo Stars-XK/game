@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron'
 import { IPC_CHANNELS } from '../ipc/channels'
-import { getConfig } from '../ipc/handlers/config'
+import { getConfig } from '../config/store'
 import { 
   PersonalityType, 
   CharacterPersonality, 

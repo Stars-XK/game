@@ -15,6 +15,8 @@ interface VRMModelProps {
   onClick?: () => void
   onContextMenu?: (e: MouseEvent) => void
   onDoubleClick?: (e: MouseEvent) => void
+  onHoverChange?: (hovering: boolean) => void
+  onModelPointerDown?: (e: MouseEvent) => void
   onLoad?: (vrm: VRM) => void
   onFallback?: () => void
 }
@@ -28,6 +30,8 @@ function VRMModel({
   onClick,
   onContextMenu,
   onDoubleClick,
+  onHoverChange,
+  onModelPointerDown,
   onLoad, 
   onFallback 
 }: VRMModelProps) {
@@ -39,6 +43,7 @@ function VRMModel({
   const clockRef = useRef(new THREE.Clock())
   const raycasterRef = useRef(new THREE.Raycaster())
   const mouseRef = useRef(new THREE.Vector2())
+  const hoveringRef = useRef(false)
 
   useEffect(() => {
     setLoaded(false)
@@ -171,6 +176,21 @@ function VRMModel({
   }, [camera, gl, loaded])
 
   useEffect(() => {
+    if (!loaded || !onHoverChange) return
+
+    const handleMove = (event: MouseEvent) => {
+      const hit = checkIntersection(event)
+      if (hit !== hoveringRef.current) {
+        hoveringRef.current = hit
+        onHoverChange(hit)
+      }
+    }
+
+    gl.domElement.addEventListener('mousemove', handleMove)
+    return () => gl.domElement.removeEventListener('mousemove', handleMove)
+  }, [checkIntersection, gl, loaded, onHoverChange])
+
+  useEffect(() => {
     if (!loaded || !onClick) return
 
     const handleClick = (event: MouseEvent) => {
@@ -209,6 +229,19 @@ function VRMModel({
     gl.domElement.addEventListener('dblclick', handleDoubleClick)
     return () => gl.domElement.removeEventListener('dblclick', handleDoubleClick)
   }, [gl, loaded, onDoubleClick, checkIntersection])
+
+  useEffect(() => {
+    if (!loaded || !onModelPointerDown) return
+
+    const handleMouseDown = (event: MouseEvent) => {
+      if (checkIntersection(event)) {
+        onModelPointerDown(event)
+      }
+    }
+
+    gl.domElement.addEventListener('mousedown', handleMouseDown)
+    return () => gl.domElement.removeEventListener('mousedown', handleMouseDown)
+  }, [checkIntersection, gl, loaded, onModelPointerDown])
 
   useFrame(() => {
     if (!vrmRef.current || !loaded) return
@@ -297,6 +330,8 @@ interface VRMCanvasProps {
   onClick?: () => void
   onContextMenu?: (e: MouseEvent) => void
   onDoubleClick?: (e: MouseEvent) => void
+  onHoverChange?: (hovering: boolean) => void
+  onModelPointerDown?: (e: MouseEvent) => void
   onWheel?: (e: React.WheelEvent) => void
   onLoad?: (vrm: VRM) => void
 }
@@ -312,6 +347,8 @@ export function VRMCanvas({
   onClick,
   onContextMenu,
   onDoubleClick,
+  onHoverChange,
+  onModelPointerDown,
   onWheel,
   onLoad
 }: VRMCanvasProps) {
@@ -346,6 +383,8 @@ export function VRMCanvas({
             onClick={onClick}
             onContextMenu={onContextMenu}
             onDoubleClick={onDoubleClick}
+            onHoverChange={onHoverChange}
+            onModelPointerDown={onModelPointerDown}
             onLoad={onLoad}
           />
 

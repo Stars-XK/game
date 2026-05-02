@@ -11,6 +11,8 @@ interface ElectronAPI {
     hide: () => Promise<void>
     setAlwaysOnTop: (value: boolean) => Promise<void>
     setPosition: (x: number, y: number) => Promise<void>
+    getPosition: () => Promise<{ x: number; y: number } | null>
+    setMousePassthrough: (enabled: boolean) => Promise<void>
   }
   ai: {
     chat: (messages: Array<{ role: string; content: string }>) => Promise<string>
@@ -53,6 +55,9 @@ interface ElectronAPI {
     export: () => Promise<{ success: boolean; message: string; filePath?: string }>
     import: () => Promise<{ success: boolean; message: string }>
     reset: () => Promise<{ success: boolean; message: string }>
+  }
+  events: {
+    onOpenSettings: (callback: () => void) => () => void
   }
 }
 

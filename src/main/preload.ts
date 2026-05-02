@@ -19,6 +19,8 @@ const IPC_CHANNELS = {
     HIDE: 'window:hide',
     SET_ALWAYS_ON_TOP: 'window:set-always-on-top',
     SET_POSITION: 'window:set-position',
+    GET_POSITION: 'window:get-position',
+    SET_MOUSE_PASSTHROUGH: 'window:set-mouse-passthrough',
   },
   PET: {
     GET_STATE: 'pet:get-state',
@@ -68,6 +70,9 @@ export const electronAPI = {
     hide: () => ipcRenderer.invoke(IPC_CHANNELS.WINDOW.HIDE),
     setAlwaysOnTop: (value: boolean) => ipcRenderer.invoke(IPC_CHANNELS.WINDOW.SET_ALWAYS_ON_TOP, value),
     setPosition: (x: number, y: number) => ipcRenderer.invoke(IPC_CHANNELS.WINDOW.SET_POSITION, x, y),
+    getPosition: () => ipcRenderer.invoke(IPC_CHANNELS.WINDOW.GET_POSITION),
+    setMousePassthrough: (enabled: boolean) =>
+      ipcRenderer.invoke(IPC_CHANNELS.WINDOW.SET_MOUSE_PASSTHROUGH, enabled),
   },
   ai: {
     chat: (messages: Array<{ role: string; content: string }>) =>
@@ -106,6 +111,15 @@ export const electronAPI = {
     export: () => ipcRenderer.invoke(IPC_CHANNELS.DATA.EXPORT),
     import: () => ipcRenderer.invoke(IPC_CHANNELS.DATA.IMPORT),
     reset: () => ipcRenderer.invoke(IPC_CHANNELS.DATA.RESET),
+  },
+  events: {
+    onOpenSettings: (callback: () => void) => {
+      const listener = () => callback()
+      ipcRenderer.on('open-settings', listener)
+      return () => {
+        ipcRenderer.removeListener('open-settings', listener)
+      }
+    },
   },
 }
 

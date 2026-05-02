@@ -1,19 +1,23 @@
 import { BrowserWindow, screen } from 'electron'
 import path from 'path'
+import { getConfig } from '../config/store'
 
 let mainWindow: BrowserWindow | null = null
 
 export function createWindow(): BrowserWindow {
   const { width, height } = screen.getPrimaryDisplay().workAreaSize
+  const config = getConfig()
+  const initialX = config.windowPosition?.x ?? width - 450
+  const initialY = config.windowPosition?.y ?? height - 450
 
   mainWindow = new BrowserWindow({
     width: 400,
     height: 400,
-    x: width - 450,
-    y: height - 450,
+    x: initialX,
+    y: initialY,
     transparent: true,
     frame: false,
-    alwaysOnTop: true,
+    alwaysOnTop: config.alwaysOnTop ?? true,
     resizable: false,
     skipTaskbar: true,
     hasShadow: false,
@@ -73,4 +77,14 @@ export function getWindowPosition(): { x: number; y: number } | null {
     return { x, y }
   }
   return null
+}
+
+export function setMousePassthrough(enabled: boolean): void {
+  if (mainWindow) {
+    if (enabled) {
+      mainWindow.setIgnoreMouseEvents(true, { forward: true })
+    } else {
+      mainWindow.setIgnoreMouseEvents(false)
+    }
+  }
 }
