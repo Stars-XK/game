@@ -17,6 +17,7 @@ import { useMousePassthrough } from './hooks/useMousePassthrough'
 import { useToast } from './components/common/Toast'
 import { usePetStats } from './hooks/usePetStats'
 import { debounce } from './utils/helpers'
+import { getPetModelUrl } from '@shared/data/petModels'
 import './styles/index.css'
 
 function App() {
@@ -33,6 +34,9 @@ function App() {
   const [showStatus, setShowStatus] = useState(false)
   const [showFeed, setShowFeed] = useState(false)
   const [modelScale, setModelScale] = useState(0.4)
+  const [petModelId, setPetModelId] = useState<string>('character')
+  const [petModelUrl, setPetModelUrl] = useState<string>(getPetModelUrl('character'))
+  const [isSpeaking, setIsSpeaking] = useState(false)
   const dragRef = useRef({ isDragging: false, startX: 0, startY: 0 })
   const windowDragRef = useRef<{
     dragging: boolean
@@ -68,6 +72,37 @@ function App() {
       showChat || showSettings || showDressUp || showGame || showAchievement || showStatus || showFeed
     passthrough.setPanelOpen(open)
   }, [showChat, showSettings, showDressUp, showGame, showAchievement, showStatus, showFeed, passthrough])
+
+  useEffect(() => {
+    const load = async () => {
+      if (!window.electronAPI?.config?.get) return
+      const config = await window.electronAPI.config.get()
+      const id = (config.petModelId as string) || 'character'
+      setPetModelId(id)
+      setPetModelUrl(getPetModelUrl(id))
+    }
+    void load()
+  }, [])
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<{ petModelId?: string }>).detail
+      const id = detail?.petModelId || 'character'
+      setPetModelId(id)
+      setPetModelUrl(getPetModelUrl(id))
+    }
+    window.addEventListener('pet-model-changed', handler as EventListener)
+    return () => window.removeEventListener('pet-model-changed', handler as EventListener)
+  }, [])
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<{ speaking?: boolean }>).detail
+      setIsSpeaking(Boolean(detail?.speaking))
+    }
+    window.addEventListener('tts-speaking', handler as EventListener)
+    return () => window.removeEventListener('tts-speaking', handler as EventListener)
+  }, [])
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -299,13 +334,14 @@ function App() {
     <>
       <div className="app-container">
         <VRMCanvas
-          modelUrl="/models/character.vrm"
+          modelUrl={petModelUrl}
           scale={modelScale}
           position={[0, -0.3, 0]}
           cameraPosition={[0, 0.8, 2.5]}
           cameraFov={35}
           mood={state.mood}
           action={state.action}
+          speaking={isSpeaking}
           onClick={handlePetClick}
           onContextMenu={(e) => {
             e.preventDefault()

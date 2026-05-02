@@ -16,6 +16,10 @@ export function useTTS(): UseTTSReturn {
   const [config, setConfigState] = useState<TTSConfig>(DEFAULT_TTS_CONFIG)
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
 
+  const emitSpeaking = useCallback((speaking: boolean) => {
+    window.dispatchEvent(new CustomEvent('tts-speaking', { detail: { speaking } }))
+  }, [])
+
   useEffect(() => {
     const loadVoices = () => {
       const availableVoices = window.speechSynthesis.getVoices()
@@ -55,19 +59,29 @@ export function useTTS(): UseTTSReturn {
       utterance.pitch = config.pitch
       utterance.volume = config.volume
 
-      utterance.onstart = () => setIsSpeaking(true)
-      utterance.onend = () => setIsSpeaking(false)
-      utterance.onerror = () => setIsSpeaking(false)
+      utterance.onstart = () => {
+        setIsSpeaking(true)
+        emitSpeaking(true)
+      }
+      utterance.onend = () => {
+        setIsSpeaking(false)
+        emitSpeaking(false)
+      }
+      utterance.onerror = () => {
+        setIsSpeaking(false)
+        emitSpeaking(false)
+      }
 
       window.speechSynthesis.speak(utterance)
     },
-    [config, voices]
+    [config, voices, emitSpeaking]
   )
 
   const stop = useCallback(() => {
     window.speechSynthesis.cancel()
     setIsSpeaking(false)
-  }, [])
+    emitSpeaking(false)
+  }, [emitSpeaking])
 
   const setConfig = useCallback((newConfig: Partial<TTSConfig>) => {
     setConfigState((prev) => ({ ...prev, ...newConfig }))

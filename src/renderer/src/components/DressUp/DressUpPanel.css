@@ -47,6 +47,27 @@
   height: calc(85vh - 60px);
 }
 
+.dressup-models {
+  display: flex;
+  gap: 8px;
+  padding: 10px 20px;
+  border-bottom: 1px solid #f0f0f0;
+  background: linear-gradient(180deg, #fff5f7 0%, #ffffff 100%);
+}
+
+.dressup-model-btn {
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+}
+
+.dressup-model-btn.active {
+  border-color: rgba(255, 183, 197, 1);
+  background: rgba(255, 183, 197, 0.25);
+}
+
 .dressup-sidebar {
   width: 200px;
   padding: 16px;

@@ -9,6 +9,7 @@ export interface AppConfig {
   autoStart: boolean
   alwaysOnTop: boolean
   windowPosition?: { x: number; y: number }
+  petModelId: 'character' | 'xiaomeng'
   interactionRange: 'screen' | 'window'
   debugMode: boolean
   appearance: PetAppearanceConfig
@@ -55,6 +56,7 @@ export const DEFAULT_CONFIG: AppConfig = {
   autoStart: false,
   alwaysOnTop: true,
   windowPosition: undefined,
+  petModelId: 'character',
   interactionRange: 'screen',
   debugMode: false,
   appearance: DEFAULT_APPEARANCE,

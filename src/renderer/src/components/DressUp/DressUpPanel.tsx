@@ -1,5 +1,6 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import { ClothesItem, ClothesCategory, Rarity, CLOTHES_DATA, CATEGORY_NAMES, RARITY_NAMES } from '@shared/data/clothes'
+import { PET_MODELS } from '@shared/data/petModels'
 import { usePetStore } from '../../stores/petStore'
 import { useToast } from '../common/Toast'
 import { ParticleSystem } from '../common/ParticleSystem'
@@ -24,6 +25,16 @@ export function DressUpPanel({ onClose }: DressUpPanelProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [previewItem, setPreviewItem] = useState<ClothesItem | null>(null)
   const [showOwnedOnly, setShowOwnedOnly] = useState(false)
+  const [petModelId, setPetModelId] = useState<string>('character')
+
+  useEffect(() => {
+    const load = async () => {
+      if (!window.electronAPI?.config?.get) return
+      const config = await window.electronAPI.config.get()
+      setPetModelId((config.petModelId as string) || 'character')
+    }
+    void load()
+  }, [])
 
   const filteredItems = useMemo(() => {
     return CLOTHES_DATA.filter((item) => {
@@ -71,6 +82,24 @@ export function DressUpPanel({ onClose }: DressUpPanelProps) {
         <div className="dressup-header">
           <h2>👗 换装间</h2>
           <button className="dressup-close" onClick={onClose}>×</button>
+        </div>
+
+        <div className="dressup-models">
+          {PET_MODELS.map((m) => (
+            <button
+              key={m.id}
+              className={`dressup-model-btn ${petModelId === m.id ? 'active' : ''}`}
+              onClick={async () => {
+                setPetModelId(m.id)
+                await window.electronAPI.config.set({ petModelId: m.id })
+                window.dispatchEvent(
+                  new CustomEvent('pet-model-changed', { detail: { petModelId: m.id } })
+                )
+              }}
+            >
+              {m.name}
+            </button>
+          ))}
         </div>
 
         <div className="dressup-content">

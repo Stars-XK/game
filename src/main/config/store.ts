@@ -5,7 +5,8 @@ import { setAutoStart } from '../system/autostart'
 const store = new Store<{ config: AppConfig }>()
 
 export function getConfig(): AppConfig {
-  return store.get('config', DEFAULT_CONFIG)
+  const stored = store.get('config')
+  return { ...DEFAULT_CONFIG, ...(stored || {}) }
 }
 
 export async function setConfig(config: Partial<AppConfig>): Promise<AppConfig> {
@@ -28,4 +29,3 @@ export function resetConfig(): AppConfig {
   store.set('config', DEFAULT_CONFIG)
   return DEFAULT_CONFIG
 }
-

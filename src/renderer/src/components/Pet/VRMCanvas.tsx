@@ -12,6 +12,7 @@ interface VRMModelProps {
   position?: [number, number, number]
   mood?: 'happy' | 'normal' | 'sad' | 'angry' | 'surprised' | 'sleepy' | 'love' | 'shy' | 'excited'
   action?: 'idle' | 'walk' | 'sit' | 'sleep' | 'eat' | 'play' | 'jump' | 'wave' | 'dance' | 'blowKiss'
+  speaking?: boolean
   onClick?: () => void
   onContextMenu?: (e: MouseEvent) => void
   onDoubleClick?: (e: MouseEvent) => void
@@ -27,6 +28,7 @@ function VRMModel({
   position = [0, 0, 0],
   mood = 'normal', 
   action = 'idle', 
+  speaking = false,
   onClick,
   onContextMenu,
   onDoubleClick,
@@ -251,6 +253,14 @@ function VRMModel({
 
     const time = clockRef.current.getElapsedTime()
 
+    const expressionManager = vrmRef.current.expressionManager
+    if (expressionManager) {
+      const target = speaking ? 0.35 + 0.25 * Math.sin(time * 18) : 0
+      const current = expressionManager.getValue(VRMExpressionPresetName.Aa) || 0
+      const next = current + (target - current) * 0.35
+      expressionManager.setValue(VRMExpressionPresetName.Aa, next)
+    }
+
     if (action === 'wave' && vrmRef.current.humanoid) {
       const rightUpperArm = vrmRef.current.humanoid.getNormalizedBoneNode('rightUpperArm')
       if (rightUpperArm) {
@@ -327,6 +337,7 @@ interface VRMCanvasProps {
   cameraFov?: number
   mood?: 'happy' | 'normal' | 'sad' | 'angry' | 'surprised' | 'sleepy' | 'love' | 'shy' | 'excited'
   action?: 'idle' | 'walk' | 'sit' | 'sleep' | 'eat' | 'play' | 'jump' | 'wave' | 'dance' | 'blowKiss'
+  speaking?: boolean
   onClick?: () => void
   onContextMenu?: (e: MouseEvent) => void
   onDoubleClick?: (e: MouseEvent) => void
@@ -344,6 +355,7 @@ export function VRMCanvas({
   cameraFov = 30,
   mood = 'normal',
   action = 'idle',
+  speaking = false,
   onClick,
   onContextMenu,
   onDoubleClick,
@@ -380,6 +392,7 @@ export function VRMCanvas({
             position={position}
             mood={mood}
             action={action}
+            speaking={speaking}
             onClick={onClick}
             onContextMenu={onContextMenu}
             onDoubleClick={onDoubleClick}
